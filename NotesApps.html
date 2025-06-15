@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Notes App</title>
+  <link rel="stylesheet" href="NotesApp.css"/>
+</head>
+<body>
+  <div class="container">
+    <h1>📝 My Notes</h1>
+    <input type="text" placeholder="Write something..." class="input-text" />
+    <button onclick="addNote()">Add Note</button>
+    <div class="list"></div>
+  </div>
+                                      <!-- javscript -->
+
+  <script>
+    let noteList = JSON.parse(localStorage.getItem('noteList')) || [];
+
+    function getCurrentTimestamp() {
+      const now = new Date();
+      return now.toLocaleString();
+    }
+
+    function addNote() {
+      const inputText = document.querySelector('.input-text');
+      if (inputText.value.trim() === '') {
+        alert('Please enter some text');
+        return;
+      }
+
+      const newNote = {
+        text: inputText.value,
+        timestamp: getCurrentTimestamp(),
+        pinned: false
+      };
+
+      noteList.push(newNote);
+      saveNotes();
+      inputText.value = '';
+    }
+
+    function deleteNote(index) {
+      noteList.splice(index, 1);
+      saveNotes();
+    }
+
+    function editNote(index) {
+      const updatedText = prompt("Edit your note:", noteList[index].text);
+      if (updatedText !== null && updatedText.trim() !== '') {
+        noteList[index].text = updatedText;
+        noteList[index].timestamp = getCurrentTimestamp();
+        saveNotes();
+      }
+    }
+
+    function pinStatus(index) {
+      noteList[index].pinned = !noteList[index].pinned;
+      saveNotes();
+    }
+
+    function saveNotes() {
+        if (noteList.length==0) {
+        localStorage.removeItem('noteList'); //  Remove empty array
+        } 
+        else {
+        localStorage.setItem('noteList', JSON.stringify(noteList));
+        }
+      displayNote();
+    }
+
+    function displayNote() {
+      const container = document.querySelector('.list');
+      container.innerHTML = '';
+
+      const pinnedNotes = [];
+      const unpinnedNotes = [];
+
+      for (let i = 0; i < noteList.length; i++) {
+        if (noteList[i].pinned) {
+          pinnedNotes.push(noteList[i]);
+        } else {
+          unpinnedNotes.push(noteList[i]);
+        }
+      }
+
+      const sortedNotes = pinnedNotes.concat(unpinnedNotes);
+
+      for (let i = 0; i < sortedNotes.length; i++) {
+        const note = sortedNotes[i];
+        const realIndex = noteList.indexOf(note);
+
+        let pinIcon = "";
+        if (note.pinned) {
+          pinIcon = "📌 ";
+        }
+
+        let pinButtonLabel = "";
+        if (note.pinned) {
+          pinButtonLabel = "Unpin";
+        } else {
+          pinButtonLabel = "Pin";
+        }
+
+        const noteElement = document.createElement('div');
+        noteElement.className = 'note';
+        noteElement.innerHTML = `
+          <strong>${pinIcon}${note.text}</strong>
+          <div class="note-date">🕒 ${note.timestamp}</div>
+          <div class="note-buttons">
+            <button onclick="pinStatus(${realIndex})">${pinButtonLabel}</button>
+            <button onclick="editNote(${realIndex})">Edit</button>
+            <button onclick="deleteNote(${realIndex})">Delete</button>
+          </div>
+        `;
+        container.appendChild(noteElement);
+      }
+    }
+
+    displayNote();
+  </script>
+</body>
+</html>
